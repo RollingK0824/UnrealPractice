@@ -12,31 +12,38 @@ class UNREALPRACTICE_API ATPSPlayer : public ACharacter
 	GENERATED_BODY()
 
 public:
-	// Sets default values for this character's properties
 	ATPSPlayer();
 
 	void Turn(const struct FInputActionValue& inputValue);
 	void LookUp(const struct FInputActionValue& inputValue);
 	void Move(const struct FInputActionValue& inputValue);
 	void InputJump(const struct FInputActionValue& inputValue);
+	void InputFire(const struct FInputActionValue& inputValue);
+	void ChangeToAssaultRifle(const struct FInputActionValue& inputValue);
+	void ChangeToSniperRifle(const struct FInputActionValue& inputValue);
 	void PlayerMove();
-
 protected:
-	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
 public:
-	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 public:
+	UPROPERTY(VisibleAnywhere, Category = GunMesh)
+	class USkeletalMeshComponent* GunMeshComp;
+
+	UPROPERTY(VisibleAnywhere, Category = GunMesh)
+	class USkeletalMeshComponent* SniperGunComp;
+
+	UPROPERTY(EditDefaultsOnly, Category = BulletFactory)
+	TSubclassOf<class ABullet> BulletFactory;
+
 	UPROPERTY(VisibleAnywhere, Category = "Camera")
 	class USpringArmComponent* SpringArmComp = nullptr;
 
-	UPROPERTY(VisibleAnywhere, Category = "Camera")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
 	class UCameraComponent* TPSCamComp = nullptr;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
@@ -54,8 +61,20 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	class UInputAction* IA_Jump;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	class UInputAction* IA_Fire;
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	class UInputAction* IA_AssaultRifle;
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	class UInputAction* IA_SniperRifle;
+
+	bool bUsingAssaultRifle = true;
+
 	UPROPERTY(EditAnywhere, Category = PlayerSettings)
 	float WalkSpeed = 600;
 
 	FVector direction;
+
+	UPROPERTY(EditAnywhere, Category = BulletEffect)
+	TObjectPtr<class UNiagaraSystem> BulletEffectFactory;
 };

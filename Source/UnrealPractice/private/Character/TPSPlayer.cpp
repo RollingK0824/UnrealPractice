@@ -7,8 +7,9 @@
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
 #include "InputActionValue.h"
+#include "Weapon/Bullet.h"
+#include "NiagaraFunctionLibrary.h"
 
-// Sets default values
 ATPSPlayer::ATPSPlayer()
 {
 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
@@ -42,6 +43,23 @@ ATPSPlayer::ATPSPlayer()
 
 	JumpMaxCount = 2;
 
+	GunMeshComp = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("GunMeshComp"));
+	GunMeshComp->SetupAttachment(GetMesh());
+	ConstructorHelpers::FObjectFinder<USkeletalMesh>TempGunMesh(TEXT("/Script/Engine.SkeletalMesh'/Game/Assets/MilitaryWeapSilver/Weapons/Assault_Rifle_A.Assault_Rifle_A'"));
+	if (TempGunMesh.Succeeded())
+	{
+		GunMeshComp->SetSkeletalMesh(TempGunMesh.Object);
+		GunMeshComp->SetRelativeLocation(FVector(-14, 11, 138));
+	}
+
+	SniperGunComp = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("SniperGunComp"));
+	SniperGunComp->SetupAttachment(GetMesh());
+	ConstructorHelpers::FObjectFinder<USkeletalMesh>TempSniperMesh(TEXT("/Script/Engine.SkeletalMesh'/Game/Assets/MilitaryWeapSilver/Weapons/Sniper_Rifle_A.Sniper_Rifle_A'"));
+	if (TempSniperMesh.Succeeded())
+	{
+		SniperGunComp->SetSkeletalMesh(TempSniperMesh.Object);
+		SniperGunComp->SetRelativeLocation(FVector(-22, 31, 128));
+	}
 }
 
 void ATPSPlayer::Turn(const struct FInputActionValue& inputValue)
@@ -69,6 +87,47 @@ void ATPSPlayer::InputJump(const struct FInputActionValue& inputValue)
 	Jump();
 }
 
+void ATPSPlayer::InputFire(const struct FInputActionValue& inputValue)
+{
+	if (bUsingAssaultRifle)
+	{
+		FTransform firePosition = GunMeshComp->GetSocketTransform(TEXT("FirePosition"));
+		GetWorld()->SpawnActor<ABullet>(BulletFactory, firePosition);
+	}
+	else
+	{
+		FVector startPos = TPSCamComp->GetComponentLocation();
+		FVector endPos = TPSCamComp->GetComponentLocation() + TPSCamComp->GetForwardVector() * 5000;
+		FHitResult hitInfo;
+		FCollisionQueryParams params;
+		params.AddIgnoredActor(this);
+		bool bHit = GetWorld()->LineTraceSingleByChannel(hitInfo, startPos, endPos, ECC_Visibility, params);
+		if (bHit)
+		{
+			FTransform bulletTrans;
+			bulletTrans.SetLocation(hitInfo.ImpactPoint);
+			UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+				this,
+				BulletEffectFactory,
+				hitInfo.ImpactPoint);
+		}
+	}
+}
+
+void ATPSPlayer::ChangeToAssaultRifle(const struct FInputActionValue& inputValue)
+{
+	bUsingAssaultRifle = true;
+	SniperGunComp->SetVisibility(false);
+	GunMeshComp->SetVisibility(true);
+}
+
+void ATPSPlayer::ChangeToSniperRifle(const struct FInputActionValue& inputValue)
+{
+	bUsingAssaultRifle = false;
+	SniperGunComp->SetVisibility(true);
+	GunMeshComp->SetVisibility(false);
+}
+
 void ATPSPlayer::PlayerMove()
 {
 	direction = FTransform(GetControlRotation()).TransformVector(direction);
@@ -94,6 +153,8 @@ void ATPSPlayer::BeginPlay()
 			subSystem->AddMappingContext(IMC_TPS, 0);
 		}
 	}
+
+	ChangeToSniperRifle(FInputActionValue());
 }
 
 // Called every frame
@@ -116,6 +177,9 @@ void ATPSPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 		PlayerInput->BindAction(IA_LookUp, ETriggerEvent::Triggered, this, &ATPSPlayer::LookUp);
 		PlayerInput->BindAction(IA_Move, ETriggerEvent::Triggered, this, &ATPSPlayer::Move);
 		PlayerInput->BindAction(IA_Jump, ETriggerEvent::Triggered, this, &ATPSPlayer::InputJump);
+		PlayerInput->BindAction(IA_Fire, ETriggerEvent::Triggered, this, &ATPSPlayer::InputFire);
+		PlayerInput->BindAction(IA_AssaultRifle, ETriggerEvent::Triggered, this, &ATPSPlayer::ChangeToAssaultRifle);
+		PlayerInput->BindAction(IA_SniperRifle, ETriggerEvent::Triggered, this, &ATPSPlayer::ChangeToSniperRifle);
 	}
 }
 
