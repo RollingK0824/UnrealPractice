@@ -40,6 +40,8 @@ ATPSPlayer::ATPSPlayer()
 
 	bUseControllerRotationYaw = true;
 
+	JumpMaxCount = 2;
+
 }
 
 void ATPSPlayer::Turn(const struct FInputActionValue& inputValue)
@@ -52,6 +54,30 @@ void ATPSPlayer::LookUp(const struct FInputActionValue& inputValue)
 {
 	float value = inputValue.Get<float>();
 	AddControllerPitchInput(value);
+}
+
+void ATPSPlayer::Move(const struct FInputActionValue& inputValue)
+{
+	FVector2D value = inputValue.Get<FVector2D>();
+
+	direction.X = value.X;
+	direction.Y = value.Y;
+}
+
+void ATPSPlayer::InputJump(const struct FInputActionValue& inputValue)
+{
+	Jump();
+}
+
+void ATPSPlayer::PlayerMove()
+{
+	direction = FTransform(GetControlRotation()).TransformVector(direction);
+	/*FVector P0 = GetActorLocation();
+	FVector vt = direciton * WalkSpeed * DeltaTime;
+	FVector P = P0 + vt;
+	SetActorLocation(P);*/
+	AddMovementInput(direction);
+	direction = FVector::ZeroVector;
 }
 
 // Called when the game starts or when spawned
@@ -75,6 +101,7 @@ void ATPSPlayer::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	PlayerMove();
 }
 
 // Called to bind functionality to input
@@ -87,6 +114,8 @@ void ATPSPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 	{
 		PlayerInput->BindAction(IA_Turn, ETriggerEvent::Triggered, this, &ATPSPlayer::Turn);
 		PlayerInput->BindAction(IA_LookUp, ETriggerEvent::Triggered, this, &ATPSPlayer::LookUp);
+		PlayerInput->BindAction(IA_Move, ETriggerEvent::Triggered, this, &ATPSPlayer::Move);
+		PlayerInput->BindAction(IA_Jump, ETriggerEvent::Triggered, this, &ATPSPlayer::InputJump);
 	}
 }
 

@@ -17,6 +17,9 @@ public:
 
 	void Turn(const struct FInputActionValue& inputValue);
 	void LookUp(const struct FInputActionValue& inputValue);
+	void Move(const struct FInputActionValue& inputValue);
+	void InputJump(const struct FInputActionValue& inputValue);
+	void PlayerMove();
 
 protected:
 	// Called when the game starts or when spawned
@@ -44,4 +47,15 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	class UInputAction* IA_Turn;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	class UInputAction* IA_Move;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	class UInputAction* IA_Jump;
+
+	UPROPERTY(EditAnywhere, Category = PlayerSettings)
+	float WalkSpeed = 600;
+
+	FVector direction;
 };
