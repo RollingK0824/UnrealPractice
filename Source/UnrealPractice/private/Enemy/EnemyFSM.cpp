@@ -4,6 +4,8 @@
 #include <Kismet/GamePlayStatics.h>
 #include "../UnrealPractice.h"
 #include <Components/CapsuleComponent.h>
+#include "Enemy/EnemyAnim.h"
+
 UEnemyFSM::UEnemyFSM()
 {
 	PrimaryComponentTick.bCanEverTick = true;
@@ -17,6 +19,8 @@ void UEnemyFSM::BeginPlay()
 	auto actor = UGameplayStatics::GetActorOfClass(GetWorld(), ATPSPlayer::StaticClass());
 	Target = Cast<ATPSPlayer>(actor);
 	Me = Cast<AEnemy>(GetOwner());
+
+	Anim = Cast<UEnemyAnim>(Me->GetMesh()->GetAnimInstance());
 }
 
 void UEnemyFSM::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -53,6 +57,8 @@ void UEnemyFSM::IdleState()
 	{
 		MState = EEnemyState::Move;
 		CurrentTime = 0;
+
+		Anim->AnimState = MState;
 	}
 }
 
@@ -65,6 +71,12 @@ void UEnemyFSM::MoveState()
 	if (dir.Size() < AttackRange)
 	{
 		MState = EEnemyState::Attack;
+
+		Anim->AnimState = MState;
+
+		Anim->bAttackPlay = true;
+
+		CurrentTime = AttackDelayTime;
 	}
 }
 
@@ -75,6 +87,8 @@ void UEnemyFSM::AttackState()
 	{
 		PRINT_LOG(TEXT("Attack!!!!!"));
 		CurrentTime = 0;
+
+		Anim->bAttackPlay = true;
 	}
 
 	float distance = FVector::Distance(Target->GetActorLocation(), Me->GetActorLocation());
@@ -82,6 +96,7 @@ void UEnemyFSM::AttackState()
 	if (distance > AttackRange)
 	{
 		MState = EEnemyState::Move;
+		Anim->AnimState = MState;
 	}
 }
 
@@ -92,11 +107,17 @@ void UEnemyFSM::DamageState()
 	{
 		MState = EEnemyState::Idle;
 		CurrentTime = 0;
+		Anim->AnimState = MState;
 	}
 }
 
 void UEnemyFSM::DieState()
 {
+	if (Anim->bDieDone == false)
+	{
+		return;
+	}
+
 	FVector P0 = Me->GetActorLocation();
 	FVector vt = FVector::DownVector * DieSpeed * GetWorld()->DeltaTimeSeconds;
 	FVector P = P0 + vt;
@@ -114,10 +135,20 @@ void UEnemyFSM::OnDamageProcess()
 	if (Hp > 0)
 	{
 		MState = EEnemyState::Damage;
+
+		CurrentTime = 0;
+
+		int32 index = FMath::RandRange(0, 1);
+		FString sectionName = FString::Printf(TEXT("Damage%d"), index);
+		Anim->PlayDamageAnim(FName(*sectionName));
 	}
 	else
 	{
 		MState = EEnemyState::Die;
 		Me->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+		Anim->PlayDamageAnim(TEXT("Die"));
 	}
+
+	Anim->AnimState = MState;
 }
