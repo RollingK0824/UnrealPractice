@@ -21,6 +21,8 @@ public:
 	void InputFire(const struct FInputActionValue& inputValue);
 	void ChangeToAssaultRifle(const struct FInputActionValue& inputValue);
 	void ChangeToSniperRifle(const struct FInputActionValue& inputValue);
+	void InputRun();
+
 	void PlayerMove();
 protected:
 	virtual void BeginPlay() override;
@@ -46,6 +48,17 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
 	class UCameraComponent* TPSCamComp = nullptr;
 
+	UPROPERTY(EditAnywhere, Category = BulletEffect)
+	TObjectPtr<class UNiagaraSystem> BulletEffectFactory;
+
+	UPROPERTY(EditDefaultsOnly, Category = CameraMotion)
+	TSubclassOf<class UCameraShakeBase> CameraShake;
+
+	UPROPERTY(EditDefaultsOnly, Category = Sound)
+	class USoundBase* BulletSound;
+
+#pragma region Input & Move
+public:
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	class UInputMappingContext* IMC_TPS;
 
@@ -63,18 +76,26 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	class UInputAction* IA_Fire;
+
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	class UInputAction* IA_AssaultRifle;
+
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	class UInputAction* IA_SniperRifle;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	class UInputAction* IA_PlayerRun;
 
 	bool bUsingAssaultRifle = true;
 
 	UPROPERTY(EditAnywhere, Category = PlayerSettings)
-	float WalkSpeed = 600;
+	float WalkSpeed = 200;
+
+	UPROPERTY(EditAnywhere, Category = PlayerSettings)
+	float RunSpeed = 600;
 
 	FVector direction;
+#pragma endregion
 
-	UPROPERTY(EditAnywhere, Category = BulletEffect)
-	TObjectPtr<class UNiagaraSystem> BulletEffectFactory;
+
 };

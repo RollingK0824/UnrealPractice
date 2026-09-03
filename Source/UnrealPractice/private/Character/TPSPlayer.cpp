@@ -1,6 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "Character/TPSPlayer.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
@@ -9,6 +6,9 @@
 #include "InputActionValue.h"
 #include "Weapon/Bullet.h"
 #include "NiagaraFunctionLibrary.h"
+#include <GameFramework/CharacterMovementComponent.h>
+#include "Character/PlayerAnim.h"
+#include "Kismet/GameplayStatics.h"
 
 ATPSPlayer::ATPSPlayer()
 {
@@ -44,22 +44,29 @@ ATPSPlayer::ATPSPlayer()
 	JumpMaxCount = 2;
 
 	GunMeshComp = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("GunMeshComp"));
-	GunMeshComp->SetupAttachment(GetMesh());
+	GunMeshComp->SetupAttachment(GetMesh(), TEXT("hand_rSocket"));
 	ConstructorHelpers::FObjectFinder<USkeletalMesh>TempGunMesh(TEXT("/Script/Engine.SkeletalMesh'/Game/Assets/MilitaryWeapSilver/Weapons/Assault_Rifle_A.Assault_Rifle_A'"));
 	if (TempGunMesh.Succeeded())
 	{
 		GunMeshComp->SetSkeletalMesh(TempGunMesh.Object);
-		GunMeshComp->SetRelativeLocation(FVector(-14, 11, 138));
+		//GunMeshComp->SetRelativeLocation(FVector(-14, 11, 138));
 	}
 
 	SniperGunComp = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("SniperGunComp"));
-	SniperGunComp->SetupAttachment(GetMesh());
+	SniperGunComp->SetupAttachment(GetMesh(), TEXT("hand_rSocket"));
 	ConstructorHelpers::FObjectFinder<USkeletalMesh>TempSniperMesh(TEXT("/Script/Engine.SkeletalMesh'/Game/Assets/MilitaryWeapSilver/Weapons/Sniper_Rifle_A.Sniper_Rifle_A'"));
 	if (TempSniperMesh.Succeeded())
 	{
 		SniperGunComp->SetSkeletalMesh(TempSniperMesh.Object);
-		SniperGunComp->SetRelativeLocation(FVector(-22, 31, 128));
+		//SniperGunComp->SetRelativeLocation(FVector(-22, 31, 128));
 	}
+
+	ConstructorHelpers::FObjectFinder<USoundBase> tempSound(TEXT("/Script/Engine.SoundCue'/Game/Assets/MilitaryWeapSilver/Sound/Rifle/Cues/RifleA_Fire_Cue.RifleA_Fire_Cue'"));
+	if (tempSound.Succeeded())
+	{
+		BulletSound = tempSound.Object;
+	}
+
 }
 
 void ATPSPlayer::Turn(const struct FInputActionValue& inputValue)
@@ -89,6 +96,17 @@ void ATPSPlayer::InputJump(const struct FInputActionValue& inputValue)
 
 void ATPSPlayer::InputFire(const struct FInputActionValue& inputValue)
 {
+	UGameplayStatics::PlaySound2D(GetWorld(), BulletSound);
+
+	APlayerController* PlayerController = Cast<APlayerController>(GetController());
+	if (PlayerController)
+	{
+		PlayerController->PlayerCameraManager->StartCameraShake(CameraShake);
+	}
+
+	auto anim = Cast<UPlayerAnim>(GetMesh()->GetAnimInstance());
+	anim->PlayAttackAnim();
+
 	if (bUsingAssaultRifle)
 	{
 		FTransform firePosition = GunMeshComp->GetSocketTransform(TEXT("FirePosition"));
@@ -128,6 +146,20 @@ void ATPSPlayer::ChangeToSniperRifle(const struct FInputActionValue& inputValue)
 	GunMeshComp->SetVisibility(false);
 }
 
+void ATPSPlayer::InputRun()
+{
+	auto movement = GetCharacterMovement();
+
+	if (movement->MaxWalkSpeed > WalkSpeed)
+	{
+		movement->MaxWalkSpeed = WalkSpeed;
+	}
+	else
+	{
+		movement->MaxWalkSpeed = RunSpeed;
+	}
+}
+
 void ATPSPlayer::PlayerMove()
 {
 	direction = FTransform(GetControlRotation()).TransformVector(direction);
@@ -143,6 +175,8 @@ void ATPSPlayer::PlayerMove()
 void ATPSPlayer::BeginPlay()
 {
 	Super::BeginPlay();
+
+	GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
 
 	auto pc = Cast<APlayerController>(Controller);
 	if (pc)
@@ -180,6 +214,8 @@ void ATPSPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 		PlayerInput->BindAction(IA_Fire, ETriggerEvent::Triggered, this, &ATPSPlayer::InputFire);
 		PlayerInput->BindAction(IA_AssaultRifle, ETriggerEvent::Triggered, this, &ATPSPlayer::ChangeToAssaultRifle);
 		PlayerInput->BindAction(IA_SniperRifle, ETriggerEvent::Triggered, this, &ATPSPlayer::ChangeToSniperRifle);
+		PlayerInput->BindAction(IA_PlayerRun, ETriggerEvent::Started, this, &ATPSPlayer::InputRun);
+		PlayerInput->BindAction(IA_PlayerRun, ETriggerEvent::Completed, this, &ATPSPlayer::InputRun);
 	}
 }
 
