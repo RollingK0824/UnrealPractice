@@ -8,6 +8,7 @@
 #include "NiagaraFunctionLibrary.h"
 #include <GameFramework/CharacterMovementComponent.h>
 #include "Character/PlayerAnim.h"
+#include "Enemy/EnemyFSM.h"
 #include "Kismet/GameplayStatics.h"
 
 ATPSPlayer::ATPSPlayer()
@@ -119,6 +120,7 @@ void ATPSPlayer::InputFire(const struct FInputActionValue& inputValue)
 		FHitResult hitInfo;
 		FCollisionQueryParams params;
 		params.AddIgnoredActor(this);
+
 		bool bHit = GetWorld()->LineTraceSingleByChannel(hitInfo, startPos, endPos, ECC_Visibility, params);
 		if (bHit)
 		{
@@ -128,6 +130,21 @@ void ATPSPlayer::InputFire(const struct FInputActionValue& inputValue)
 				this,
 				BulletEffectFactory,
 				hitInfo.ImpactPoint);
+
+			auto hitComp = hitInfo.GetComponent();
+			if (hitComp && hitComp->IsSimulatingPhysics())
+			{
+				FVector dir = (endPos - startPos).GetSafeNormal();
+				FVector force = dir * hitComp->GetMass() * 50000;
+				hitComp->AddForceAtLocation(force, hitInfo.ImpactPoint);
+			}
+
+			auto enemy = hitInfo.GetActor()->GetDefaultSubobjectByName(TEXT("FSM"));
+			if (enemy)
+			{
+				auto enemyFSM = Cast<UEnemyFSM>(enemy);
+				enemyFSM->OnDamageProcess();
+			}
 		}
 	}
 }
