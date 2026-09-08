@@ -73,18 +73,6 @@ ATPSPlayer::ATPSPlayer()
 	playerMove = CreateDefaultSubobject<UPlayerMove>(TEXT("PlayerMove"));
 }
 
-void ATPSPlayer::Turn(const struct FInputActionValue& inputValue)
-{
-	float value = inputValue.Get<float>();
-	AddControllerYawInput(value);
-}
-
-void ATPSPlayer::LookUp(const struct FInputActionValue& inputValue)
-{
-	float value = inputValue.Get<float>();
-	AddControllerPitchInput(value);
-}
-
 void ATPSPlayer::Move(const struct FInputActionValue& inputValue)
 {
 	FVector2D value = inputValue.Get<FVector2D>();
@@ -228,8 +216,6 @@ void ATPSPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 	if (PlayerInput)
 	{
 		playerMove->SetupInputBinding(PlayerInput);
-		PlayerInput->BindAction(IA_Turn, ETriggerEvent::Triggered, this, &ATPSPlayer::Turn);
-		PlayerInput->BindAction(IA_LookUp, ETriggerEvent::Triggered, this, &ATPSPlayer::LookUp);
 		PlayerInput->BindAction(IA_Move, ETriggerEvent::Triggered, this, &ATPSPlayer::Move);
 		PlayerInput->BindAction(IA_Jump, ETriggerEvent::Triggered, this, &ATPSPlayer::InputJump);
 		PlayerInput->BindAction(IA_Fire, ETriggerEvent::Triggered, this, &ATPSPlayer::InputFire);

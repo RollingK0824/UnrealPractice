@@ -14,8 +14,7 @@ class UNREALPRACTICE_API ATPSPlayer : public ACharacter
 public:
 	ATPSPlayer();
 
-	void Turn(const struct FInputActionValue& inputValue);
-	void LookUp(const struct FInputActionValue& inputValue);
+
 	void Move(const struct FInputActionValue& inputValue);
 	void InputJump(const struct FInputActionValue& inputValue);
 	void InputFire(const struct FInputActionValue& inputValue);
@@ -61,12 +60,6 @@ public:
 public:
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	class UInputMappingContext* IMC_TPS;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Input")
-	class UInputAction* IA_LookUp;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Input")
-	class UInputAction* IA_Turn;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	class UInputAction* IA_Move;
