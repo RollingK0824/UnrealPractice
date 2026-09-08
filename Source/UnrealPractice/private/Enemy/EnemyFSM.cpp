@@ -5,11 +5,14 @@
 #include "../UnrealPractice.h"
 #include <Components/CapsuleComponent.h>
 #include "Enemy/EnemyAnim.h"
+#include <AIController.h>
+#include <NavigationSystem.h>
+#include "Navigation/PathFollowingComponent.h"
 
 UEnemyFSM::UEnemyFSM()
 {
 	PrimaryComponentTick.bCanEverTick = true;
-	
+
 }
 
 void UEnemyFSM::BeginPlay()
@@ -21,6 +24,8 @@ void UEnemyFSM::BeginPlay()
 	Me = Cast<AEnemy>(GetOwner());
 
 	Anim = Cast<UEnemyAnim>(Me->GetMesh()->GetAnimInstance());
+
+	AI = Cast<AAIController>(Me->GetController());
 }
 
 void UEnemyFSM::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -59,6 +64,7 @@ void UEnemyFSM::IdleState()
 		CurrentTime = 0;
 
 		Anim->AnimState = MState;
+		GetRandomPositionInNavMesh(Me->GetActorLocation(), 500, RandomPos);
 	}
 }
 
@@ -68,8 +74,35 @@ void UEnemyFSM::MoveState()
 	FVector dir = destination - Me->GetActorLocation();
 	Me->AddMovementInput(dir.GetSafeNormal());
 
+	auto ns = UNavigationSystemV1::GetNavigationSystem(GetWorld());
+
+	FPathFindingQuery query;
+	FAIMoveRequest req;
+	req.SetAcceptanceRadius(3);
+	req.SetGoalLocation(destination);
+
+	AI->BuildPathfindingQuery(req, query);
+
+	FPathFindingResult r = ns->FindPathSync(query);
+
+	if (r.Result == ENavigationQueryResult::Success)
+	{
+		AI->MoveToLocation(destination);
+	}
+	else
+	{
+		auto result = AI->MoveToLocation(RandomPos);
+
+		if (result == EPathFollowingRequestResult::AlreadyAtGoal)
+		{
+			GetRandomPositionInNavMesh(Me->GetActorLocation(), 500, RandomPos);
+		}
+	}
+
 	if (dir.Size() < AttackRange)
 	{
+		AI->StopMovement();
+
 		MState = EEnemyState::Attack;
 
 		Anim->AnimState = MState;
@@ -97,6 +130,8 @@ void UEnemyFSM::AttackState()
 	{
 		MState = EEnemyState::Move;
 		Anim->AnimState = MState;
+
+		GetRandomPositionInNavMesh(Me->GetActorLocation(), 500, RandomPos);
 	}
 }
 
@@ -151,4 +186,14 @@ void UEnemyFSM::OnDamageProcess()
 	}
 
 	Anim->AnimState = MState;
+	AI->StopMovement();
+}
+
+bool UEnemyFSM::GetRandomPositionInNavMesh(FVector centerLocation, float radius, FVector& dest)
+{
+	auto ns = UNavigationSystemV1::GetNavigationSystem(GetWorld());
+	FNavLocation loc;
+	bool result = ns->GetRandomReachablePointInRadius(centerLocation, radius, loc);
+	dest = loc.Location;
+	return result;
 }

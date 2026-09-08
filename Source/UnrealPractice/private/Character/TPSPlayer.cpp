@@ -10,6 +10,7 @@
 #include "Character/PlayerAnim.h"
 #include "Enemy/EnemyFSM.h"
 #include "Kismet/GameplayStatics.h"
+#include "Character/PlayerMove.h"
 
 ATPSPlayer::ATPSPlayer()
 {
@@ -68,6 +69,8 @@ ATPSPlayer::ATPSPlayer()
 		BulletSound = tempSound.Object;
 	}
 
+
+	playerMove = CreateDefaultSubobject<UPlayerMove>(TEXT("PlayerMove"));
 }
 
 void ATPSPlayer::Turn(const struct FInputActionValue& inputValue)
@@ -224,6 +227,7 @@ void ATPSPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 	auto PlayerInput = CastChecked<UEnhancedInputComponent>(PlayerInputComponent);
 	if (PlayerInput)
 	{
+		playerMove->SetupInputBinding(PlayerInput);
 		PlayerInput->BindAction(IA_Turn, ETriggerEvent::Triggered, this, &ATPSPlayer::Turn);
 		PlayerInput->BindAction(IA_LookUp, ETriggerEvent::Triggered, this, &ATPSPlayer::LookUp);
 		PlayerInput->BindAction(IA_Move, ETriggerEvent::Triggered, this, &ATPSPlayer::Move);

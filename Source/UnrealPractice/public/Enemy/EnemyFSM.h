@@ -68,4 +68,11 @@ public:
 
 	UPROPERTY()
 	class UEnemyAnim* Anim;
+
+	UPROPERTY()
+	class AAIController* AI;
+
+	FVector RandomPos;
+
+	bool GetRandomPositionInNavMesh(FVector centerLocation, float radius, FVector& dest);
 };

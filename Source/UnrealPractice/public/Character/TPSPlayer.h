@@ -97,5 +97,7 @@ public:
 	FVector direction;
 #pragma endregion
 
-
+public:
+	UPROPERTY(VisibleAnywhere, Category = Component)
+	class UPlayerBaseComponent* playerMove;
 };
