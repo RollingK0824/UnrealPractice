@@ -14,15 +14,12 @@ class UNREALPRACTICE_API ATPSPlayer : public ACharacter
 public:
 	ATPSPlayer();
 
-
-	void Move(const struct FInputActionValue& inputValue);
 	void InputJump(const struct FInputActionValue& inputValue);
 	void InputFire(const struct FInputActionValue& inputValue);
 	void ChangeToAssaultRifle(const struct FInputActionValue& inputValue);
 	void ChangeToSniperRifle(const struct FInputActionValue& inputValue);
-	void InputRun();
 
-	void PlayerMove();
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -62,9 +59,6 @@ public:
 	class UInputMappingContext* IMC_TPS;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
-	class UInputAction* IA_Move;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	class UInputAction* IA_Jump;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
@@ -76,18 +70,8 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	class UInputAction* IA_SniperRifle;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Input")
-	class UInputAction* IA_PlayerRun;
-
 	bool bUsingAssaultRifle = true;
 
-	UPROPERTY(EditAnywhere, Category = PlayerSettings)
-	float WalkSpeed = 200;
-
-	UPROPERTY(EditAnywhere, Category = PlayerSettings)
-	float RunSpeed = 600;
-
-	FVector direction;
 #pragma endregion
 
 public:

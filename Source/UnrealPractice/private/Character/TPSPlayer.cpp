@@ -73,13 +73,6 @@ ATPSPlayer::ATPSPlayer()
 	playerMove = CreateDefaultSubobject<UPlayerMove>(TEXT("PlayerMove"));
 }
 
-void ATPSPlayer::Move(const struct FInputActionValue& inputValue)
-{
-	FVector2D value = inputValue.Get<FVector2D>();
-
-	direction.X = value.X;
-	direction.Y = value.Y;
-}
 
 void ATPSPlayer::InputJump(const struct FInputActionValue& inputValue)
 {
@@ -154,37 +147,11 @@ void ATPSPlayer::ChangeToSniperRifle(const struct FInputActionValue& inputValue)
 	GunMeshComp->SetVisibility(false);
 }
 
-void ATPSPlayer::InputRun()
-{
-	auto movement = GetCharacterMovement();
 
-	if (movement->MaxWalkSpeed > WalkSpeed)
-	{
-		movement->MaxWalkSpeed = WalkSpeed;
-	}
-	else
-	{
-		movement->MaxWalkSpeed = RunSpeed;
-	}
-}
 
-void ATPSPlayer::PlayerMove()
-{
-	direction = FTransform(GetControlRotation()).TransformVector(direction);
-	/*FVector P0 = GetActorLocation();
-	FVector vt = direciton * WalkSpeed * DeltaTime;
-	FVector P = P0 + vt;
-	SetActorLocation(P);*/
-	AddMovementInput(direction);
-	direction = FVector::ZeroVector;
-}
-
-// Called when the game starts or when spawned
 void ATPSPlayer::BeginPlay()
 {
 	Super::BeginPlay();
-
-	GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
 
 	auto pc = Cast<APlayerController>(Controller);
 	if (pc)
@@ -203,8 +170,6 @@ void ATPSPlayer::BeginPlay()
 void ATPSPlayer::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
-	PlayerMove();
 }
 
 // Called to bind functionality to input
@@ -216,13 +181,12 @@ void ATPSPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 	if (PlayerInput)
 	{
 		playerMove->SetupInputBinding(PlayerInput);
-		PlayerInput->BindAction(IA_Move, ETriggerEvent::Triggered, this, &ATPSPlayer::Move);
+		
 		PlayerInput->BindAction(IA_Jump, ETriggerEvent::Triggered, this, &ATPSPlayer::InputJump);
 		PlayerInput->BindAction(IA_Fire, ETriggerEvent::Triggered, this, &ATPSPlayer::InputFire);
 		PlayerInput->BindAction(IA_AssaultRifle, ETriggerEvent::Triggered, this, &ATPSPlayer::ChangeToAssaultRifle);
 		PlayerInput->BindAction(IA_SniperRifle, ETriggerEvent::Triggered, this, &ATPSPlayer::ChangeToSniperRifle);
-		PlayerInput->BindAction(IA_PlayerRun, ETriggerEvent::Started, this, &ATPSPlayer::InputRun);
-		PlayerInput->BindAction(IA_PlayerRun, ETriggerEvent::Completed, this, &ATPSPlayer::InputRun);
+
 	}
 }
 
