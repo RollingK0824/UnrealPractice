@@ -6,6 +6,8 @@
 #include "GameFramework/Character.h"
 #include "TPSPlayer.generated.h"
 
+DECLARE_MULTICAST_DELEGATE_OneParam(FInputBindingDelegate, class UEnhancedInputComponent*);
+
 UCLASS()
 class UNREALPRACTICE_API ATPSPlayer : public ACharacter
 {
@@ -21,6 +23,9 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+public:
+	FInputBindingDelegate OnInputBindingDelegate;
 
 public:
 	UPROPERTY(VisibleAnywhere, Category = GunMesh)
@@ -42,6 +47,6 @@ public:
 	UPROPERTY(VisibleAnywhere, Category = Component)
 	class UPlayerBaseComponent* PlayerMove;
 
-	UPROPERTY(VisibleAnywhere, Category = Component)
-	class UPlayerBaseComponent* PlayerFire;
+	/*UPROPERTY(VisibleAnywhere, Category = Component)
+	class UPlayerBaseComponent* PlayerFire;*/
 };

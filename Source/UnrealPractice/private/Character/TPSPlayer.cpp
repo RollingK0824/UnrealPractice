@@ -58,7 +58,7 @@ ATPSPlayer::ATPSPlayer()
 	}
 
 	PlayerMove = CreateDefaultSubobject<UPlayerMove>(TEXT("PlayerMove"));
-	PlayerFire = CreateDefaultSubobject<UPlayerFire>(TEXT("PlayerFire"));
+	//PlayerFire = CreateDefaultSubobject<UPlayerFire>(TEXT("PlayerFire"));
 }
 
 void ATPSPlayer::BeginPlay()
@@ -90,8 +90,9 @@ void ATPSPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 	auto PlayerInput = CastChecked<UEnhancedInputComponent>(PlayerInputComponent);
 	if (PlayerInput)
 	{
-		PlayerMove->SetupInputBinding(PlayerInput);
-		PlayerFire->SetupInputBinding(PlayerInput);
+		OnInputBindingDelegate.Broadcast(PlayerInput);
+		/*PlayerMove->SetupInputBinding(PlayerInput);
+		PlayerFire->SetupInputBinding(PlayerInput);*/
 	}
 }
 

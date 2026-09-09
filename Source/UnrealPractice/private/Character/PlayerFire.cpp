@@ -29,9 +29,7 @@ void UPlayerFire::BeginPlay()
 	SniperUI = CreateWidget(GetWorld(), SniperUIFactory);
 
 	ChangeToSniperRifle(FInputActionValue());
-
 }
-
 
 void UPlayerFire::InputFire(const struct FInputActionValue& inputValue)
 {
@@ -119,7 +117,8 @@ void UPlayerFire::SniperAim(const FInputActionValue& inputValue)
 
 void UPlayerFire::SetupInputBinding(UEnhancedInputComponent* playerInput)
 {
+	playerInput->BindAction(IA_SniperZoom, ETriggerEvent::Started, this, &UPlayerFire::SniperAim);
 	playerInput->BindAction(IA_Fire, ETriggerEvent::Triggered, this, &UPlayerFire::InputFire);
-	playerInput->BindAction(IA_AssaultRifle, ETriggerEvent::Triggered, this, &UPlayerFire::ChangeToAssaultRifle);
-	playerInput->BindAction(IA_SniperRifle, ETriggerEvent::Triggered, this, &UPlayerFire::ChangeToSniperRifle);
+	playerInput->BindAction(IA_AssaultRifle, ETriggerEvent::Started, this, &UPlayerFire::ChangeToAssaultRifle);
+	playerInput->BindAction(IA_SniperRifle, ETriggerEvent::Started, this, &UPlayerFire::ChangeToSniperRifle);
 }

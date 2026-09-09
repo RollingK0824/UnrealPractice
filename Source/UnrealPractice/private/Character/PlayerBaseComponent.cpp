@@ -7,12 +7,18 @@ UPlayerBaseComponent::UPlayerBaseComponent()
 	bWantsInitializeComponent = true;
 }
 
+void UPlayerBaseComponent::InitializeComponent()
+{
+	Super::InitializeComponent();
+	Me = Cast<ATPSPlayer>(GetOwner());
+	MoveComp = Me->GetCharacterMovement();
+
+	Me->OnInputBindingDelegate.AddUObject(this, &UPlayerBaseComponent::SetupInputBinding);
+}
+
 void UPlayerBaseComponent::BeginPlay()
 {
 	Super::BeginPlay();
-
-	Me = Cast<ATPSPlayer>(GetOwner());
-	MoveComp = Me->GetCharacterMovement();
 }
 
 void UPlayerBaseComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)

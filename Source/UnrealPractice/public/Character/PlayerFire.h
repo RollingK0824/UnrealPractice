@@ -9,7 +9,7 @@
 /**
  * 
  */
-UCLASS()
+UCLASS(ClassGroup=(PlayerComponent),meta = (BlueprintSpawnableComponent))
 class UNREALPRACTICE_API UPlayerFire : public UPlayerBaseComponent
 {
 	GENERATED_BODY()
@@ -43,6 +43,9 @@ public:
 	void ChangeToSniperRifle(const struct FInputActionValue& inputValue);
 
 public:
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	class UInputAction* IA_SniperZoom;
+
 	UPROPERTY(EditDefaultsOnly, Category = SniperUI)
 	TSubclassOf<class UUserWidget> SniperUIFactory;
 
