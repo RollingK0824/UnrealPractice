@@ -3,6 +3,8 @@
 UPlayerBaseComponent::UPlayerBaseComponent()
 {
 	PrimaryComponentTick.bCanEverTick = false;
+
+	bWantsInitializeComponent = true;
 }
 
 void UPlayerBaseComponent::BeginPlay()

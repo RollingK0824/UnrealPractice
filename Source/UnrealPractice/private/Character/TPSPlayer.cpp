@@ -1,16 +1,10 @@
 #include "Character/TPSPlayer.h"
-#include "GameFramework/SpringArmComponent.h"
-#include "Camera/CameraComponent.h"
+#include <GameFramework//SpringArmComponent.h>
+#include <Camera/CameraComponent.h>
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
-#include "InputActionValue.h"
-#include "Weapon/Bullet.h"
-#include "NiagaraFunctionLibrary.h"
-#include <GameFramework/CharacterMovementComponent.h>
-#include "Character/PlayerAnim.h"
-#include "Enemy/EnemyFSM.h"
-#include "Kismet/GameplayStatics.h"
 #include "Character/PlayerMove.h"
+#include "Character/PlayerFire.h"
 
 ATPSPlayer::ATPSPlayer()
 {
@@ -63,91 +57,9 @@ ATPSPlayer::ATPSPlayer()
 		//SniperGunComp->SetRelativeLocation(FVector(-22, 31, 128));
 	}
 
-	ConstructorHelpers::FObjectFinder<USoundBase> tempSound(TEXT("/Script/Engine.SoundCue'/Game/Assets/MilitaryWeapSilver/Sound/Rifle/Cues/RifleA_Fire_Cue.RifleA_Fire_Cue'"));
-	if (tempSound.Succeeded())
-	{
-		BulletSound = tempSound.Object;
-	}
-
-
-	playerMove = CreateDefaultSubobject<UPlayerMove>(TEXT("PlayerMove"));
+	PlayerMove = CreateDefaultSubobject<UPlayerMove>(TEXT("PlayerMove"));
+	PlayerFire = CreateDefaultSubobject<UPlayerFire>(TEXT("PlayerFire"));
 }
-
-
-void ATPSPlayer::InputJump(const struct FInputActionValue& inputValue)
-{
-	Jump();
-}
-
-void ATPSPlayer::InputFire(const struct FInputActionValue& inputValue)
-{
-	UGameplayStatics::PlaySound2D(GetWorld(), BulletSound);
-
-	APlayerController* PlayerController = Cast<APlayerController>(GetController());
-	if (PlayerController)
-	{
-		PlayerController->PlayerCameraManager->StartCameraShake(CameraShake);
-	}
-
-	auto anim = Cast<UPlayerAnim>(GetMesh()->GetAnimInstance());
-	anim->PlayAttackAnim();
-
-	if (bUsingAssaultRifle)
-	{
-		FTransform firePosition = GunMeshComp->GetSocketTransform(TEXT("FirePosition"));
-		GetWorld()->SpawnActor<ABullet>(BulletFactory, firePosition);
-	}
-	else
-	{
-		FVector startPos = TPSCamComp->GetComponentLocation();
-		FVector endPos = TPSCamComp->GetComponentLocation() + TPSCamComp->GetForwardVector() * 5000;
-		FHitResult hitInfo;
-		FCollisionQueryParams params;
-		params.AddIgnoredActor(this);
-
-		bool bHit = GetWorld()->LineTraceSingleByChannel(hitInfo, startPos, endPos, ECC_Visibility, params);
-		if (bHit)
-		{
-			FTransform bulletTrans;
-			bulletTrans.SetLocation(hitInfo.ImpactPoint);
-			UNiagaraFunctionLibrary::SpawnSystemAtLocation(
-				this,
-				BulletEffectFactory,
-				hitInfo.ImpactPoint);
-
-			auto hitComp = hitInfo.GetComponent();
-			if (hitComp && hitComp->IsSimulatingPhysics())
-			{
-				FVector dir = (endPos - startPos).GetSafeNormal();
-				FVector force = dir * hitComp->GetMass() * 50000;
-				hitComp->AddForceAtLocation(force, hitInfo.ImpactPoint);
-			}
-
-			auto enemy = hitInfo.GetActor()->GetDefaultSubobjectByName(TEXT("FSM"));
-			if (enemy)
-			{
-				auto enemyFSM = Cast<UEnemyFSM>(enemy);
-				enemyFSM->OnDamageProcess();
-			}
-		}
-	}
-}
-
-void ATPSPlayer::ChangeToAssaultRifle(const struct FInputActionValue& inputValue)
-{
-	bUsingAssaultRifle = true;
-	SniperGunComp->SetVisibility(false);
-	GunMeshComp->SetVisibility(true);
-}
-
-void ATPSPlayer::ChangeToSniperRifle(const struct FInputActionValue& inputValue)
-{
-	bUsingAssaultRifle = false;
-	SniperGunComp->SetVisibility(true);
-	GunMeshComp->SetVisibility(false);
-}
-
-
 
 void ATPSPlayer::BeginPlay()
 {
@@ -162,8 +74,6 @@ void ATPSPlayer::BeginPlay()
 			subSystem->AddMappingContext(IMC_TPS, 0);
 		}
 	}
-
-	ChangeToSniperRifle(FInputActionValue());
 }
 
 // Called every frame
@@ -180,13 +90,8 @@ void ATPSPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 	auto PlayerInput = CastChecked<UEnhancedInputComponent>(PlayerInputComponent);
 	if (PlayerInput)
 	{
-		playerMove->SetupInputBinding(PlayerInput);
-		
-		PlayerInput->BindAction(IA_Jump, ETriggerEvent::Triggered, this, &ATPSPlayer::InputJump);
-		PlayerInput->BindAction(IA_Fire, ETriggerEvent::Triggered, this, &ATPSPlayer::InputFire);
-		PlayerInput->BindAction(IA_AssaultRifle, ETriggerEvent::Triggered, this, &ATPSPlayer::ChangeToAssaultRifle);
-		PlayerInput->BindAction(IA_SniperRifle, ETriggerEvent::Triggered, this, &ATPSPlayer::ChangeToSniperRifle);
-
+		PlayerMove->SetupInputBinding(PlayerInput);
+		PlayerFire->SetupInputBinding(PlayerInput);
 	}
 }
 

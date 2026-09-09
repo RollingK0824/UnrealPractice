@@ -14,12 +14,6 @@ class UNREALPRACTICE_API ATPSPlayer : public ACharacter
 public:
 	ATPSPlayer();
 
-	void InputJump(const struct FInputActionValue& inputValue);
-	void InputFire(const struct FInputActionValue& inputValue);
-	void ChangeToAssaultRifle(const struct FInputActionValue& inputValue);
-	void ChangeToSniperRifle(const struct FInputActionValue& inputValue);
-
-
 protected:
 	virtual void BeginPlay() override;
 
@@ -35,46 +29,19 @@ public:
 	UPROPERTY(VisibleAnywhere, Category = GunMesh)
 	class USkeletalMeshComponent* SniperGunComp;
 
-	UPROPERTY(EditDefaultsOnly, Category = BulletFactory)
-	TSubclassOf<class ABullet> BulletFactory;
-
 	UPROPERTY(VisibleAnywhere, Category = "Camera")
 	class USpringArmComponent* SpringArmComp = nullptr;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
 	class UCameraComponent* TPSCamComp = nullptr;
 
-	UPROPERTY(EditAnywhere, Category = BulletEffect)
-	TObjectPtr<class UNiagaraSystem> BulletEffectFactory;
-
-	UPROPERTY(EditDefaultsOnly, Category = CameraMotion)
-	TSubclassOf<class UCameraShakeBase> CameraShake;
-
-	UPROPERTY(EditDefaultsOnly, Category = Sound)
-	class USoundBase* BulletSound;
-
-#pragma region Input & Move
 public:
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	class UInputMappingContext* IMC_TPS;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Input")
-	class UInputAction* IA_Jump;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Input")
-	class UInputAction* IA_Fire;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Input")
-	class UInputAction* IA_AssaultRifle;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Input")
-	class UInputAction* IA_SniperRifle;
-
-	bool bUsingAssaultRifle = true;
-
-#pragma endregion
-
-public:
 	UPROPERTY(VisibleAnywhere, Category = Component)
-	class UPlayerBaseComponent* playerMove;
+	class UPlayerBaseComponent* PlayerMove;
+
+	UPROPERTY(VisibleAnywhere, Category = Component)
+	class UPlayerBaseComponent* PlayerFire;
 };

@@ -62,6 +62,12 @@ void UPlayerMove::InputRun()
 	}
 }
 
+
+void UPlayerMove::InputJump(const struct FInputActionValue& inputValue)
+{
+	Me->Jump();
+}
+
 void UPlayerMove::SetupInputBinding(UEnhancedInputComponent* playerInput)
 {
 	playerInput->BindAction(IA_Turn, ETriggerEvent::Triggered, this, &UPlayerMove::Turn);
@@ -69,4 +75,5 @@ void UPlayerMove::SetupInputBinding(UEnhancedInputComponent* playerInput)
 	playerInput->BindAction(IA_Move, ETriggerEvent::Triggered, this, &UPlayerMove::Move);
 	playerInput->BindAction(IA_PlayerRun, ETriggerEvent::Started, this, &UPlayerMove::InputRun);
 	playerInput->BindAction(IA_PlayerRun, ETriggerEvent::Completed, this, &UPlayerMove::InputRun);
+	playerInput->BindAction(IA_Jump, ETriggerEvent::Triggered, this, &UPlayerMove::InputJump);
 }

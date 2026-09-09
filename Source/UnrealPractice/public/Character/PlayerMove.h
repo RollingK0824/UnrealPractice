@@ -50,5 +50,11 @@ public:
 	void InputRun();
 
 public:
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	class UInputAction* IA_Jump;
+
+	void InputJump(const struct FInputActionValue& inputValue);
+
+public:
 	virtual void SetupInputBinding(class UEnhancedInputComponent* playerInput)override;
 };
