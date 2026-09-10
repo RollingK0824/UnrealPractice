@@ -25,6 +25,21 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 public:
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Health)
+	int32 Hp;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Health)
+	int32 InitialHP = 10;
+
+	UFUNCTION(BlueprintCallable, Category = Health)
+	void OnHitEvent();
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = Health)
+	void OnGameOver();
+
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = Health)
+	void OnUsingGun(bool isAR);
+
+public:
 	FInputBindingDelegate OnInputBindingDelegate;
 
 public:

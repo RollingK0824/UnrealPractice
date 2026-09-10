@@ -90,6 +90,7 @@ void UPlayerFire::ChangeToAssaultRifle(const struct FInputActionValue& inputValu
 	bUsingAssaultRifle = true;
 	SniperGunComp->SetVisibility(false);
 	GunMeshComp->SetVisibility(true);
+	Me->OnUsingGun(bUsingAssaultRifle);
 }
 
 void UPlayerFire::ChangeToSniperRifle(const struct FInputActionValue& inputValue)
@@ -97,6 +98,7 @@ void UPlayerFire::ChangeToSniperRifle(const struct FInputActionValue& inputValue
 	bUsingAssaultRifle = false;
 	SniperGunComp->SetVisibility(true);
 	GunMeshComp->SetVisibility(false);
+	Me->OnUsingGun(bUsingAssaultRifle);
 }
 
 void UPlayerFire::SniperAim(const FInputActionValue& inputValue)

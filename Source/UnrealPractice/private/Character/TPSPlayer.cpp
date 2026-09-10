@@ -1,10 +1,12 @@
 #include "Character/TPSPlayer.h"
-#include <GameFramework//SpringArmComponent.h>
+#include <GameFramework/SpringArmComponent.h>
 #include <Camera/CameraComponent.h>
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
 #include "Character/PlayerMove.h"
 #include "Character/PlayerFire.h"
+#include "../UnrealPractice.h"
+#include <Kismet/GameplayStatics.h>
 
 ATPSPlayer::ATPSPlayer()
 {
@@ -74,6 +76,8 @@ void ATPSPlayer::BeginPlay()
 			subSystem->AddMappingContext(IMC_TPS, 0);
 		}
 	}
+
+	Hp = InitialHP;
 }
 
 // Called every frame
@@ -94,5 +98,21 @@ void ATPSPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 		/*PlayerMove->SetupInputBinding(PlayerInput);
 		PlayerFire->SetupInputBinding(PlayerInput);*/
 	}
+}
+
+void ATPSPlayer::OnHitEvent()
+{
+	PRINT_LOG(TEXT("Damaged!"));
+	--Hp;
+	if (Hp <= 0)
+	{
+		PRINT_LOG(TEXT("Player Is Dead"));
+		OnGameOver();
+	}
+}
+
+void ATPSPlayer::OnGameOver_Implementation()
+{
+	UGameplayStatics::SetGamePaused(GetWorld(), true);
 }
 

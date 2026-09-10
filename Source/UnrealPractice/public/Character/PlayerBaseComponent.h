@@ -7,19 +7,19 @@
 #include "PlayerBaseComponent.generated.h"
 
 
-UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
+UCLASS(ClassGroup = (Custom), Blueprintable, meta = (BlueprintSpawnableComponent))
 class UNREALPRACTICE_API UPlayerBaseComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
-public:	
+public:
 	UPlayerBaseComponent();
 
 protected:
 	virtual void InitializeComponent() override;
 	virtual void BeginPlay() override;
 
-public:	
+public:
 	void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction);
 
 	UPROPERTY()
