@@ -12,7 +12,7 @@
 UCLASS(ClassGroup=(PlayerComponent),meta = (BlueprintSpawnableComponent))
 class UNREALPRACTICE_API UPlayerFire : public UPlayerBaseComponent
 {
-	GENERATED_BODY()
+	GENERATED_BODY() 
 
 public:
 	UPlayerFire();
