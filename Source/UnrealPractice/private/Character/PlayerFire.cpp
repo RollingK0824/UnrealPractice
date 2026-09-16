@@ -8,7 +8,11 @@
 #include <Camera/CameraComponent.h>
 #include "Character/PlayerAnim.h"
 #include "NiagaraFunctionLibrary.h"
-
+#include "NiagaraDataInterfaceArrayFunctionLibrary.h"
+#include "NiagaraComponent.h"
+#include "Components/DecalComponent.h"
+#include "Weapon/MyWeapon.h"
+#include "Engine/SkeletalMeshSocket.h"
 UPlayerFire::UPlayerFire()
 {
 	ConstructorHelpers::FObjectFinder<USoundBase> tempSound(TEXT("/Script/Engine.SoundCue'/Game/Assets/MilitaryWeapSilver/Sound/Rifle/Cues/RifleA_Fire_Cue.RifleA_Fire_Cue'"));
@@ -21,6 +25,19 @@ UPlayerFire::UPlayerFire()
 void UPlayerFire::BeginPlay()
 {
 	Super::BeginPlay();
+
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.Owner = Me; // 스폰시킨 캐릭터를 Owner로 설정하고 Spawn시킨다.
+
+	CurrentWeapon = GetWorld()->SpawnActor<AMyWeapon>(StartingWeapon, Me->GetActorTransform(), SpawnParams);
+	if (CurrentWeapon)
+	{
+		const USkeletalMeshSocket* HandSocket = Me->GetMesh()->GetSocketByName(FName("hand_rSocket"));
+		if (HandSocket)
+		{
+			HandSocket->AttachActor(CurrentWeapon, Me->GetMesh());
+		}
+	}
 
 	TPSCamComp = Me->TPSCamComp;
 	GunMeshComp = Me->GunMeshComp;
@@ -46,7 +63,7 @@ void UPlayerFire::InputFire(const struct FInputActionValue& inputValue)
 
 	if (bUsingAssaultRifle)
 	{
-		FTransform firePosition = GunMeshComp->GetSocketTransform(TEXT("FirePosition"));
+		FTransform firePosition = CurrentWeapon->WeaponMesh->GetSocketTransform(TEXT("FirePosition"));
 		GetWorld()->SpawnActor<ABullet>(BulletFactory, firePosition);
 	}
 	else
@@ -81,6 +98,38 @@ void UPlayerFire::InputFire(const struct FInputActionValue& inputValue)
 				auto enemyFSM = Cast<UEnemyFSM>(enemy);
 				enemyFSM->OnDamageProcess();
 			}
+
+			UDecalComponent* Decal = UGameplayStatics::SpawnDecalAtLocation(GetWorld(),
+				BulletDecalMaterial,	// 데칼 머티리얼 자체를 변수로
+				DecalSize,	// 사이즈는 원하는 데칼 크기
+				hitInfo.ImpactPoint,
+				hitInfo.ImpactNormal.Rotation(),
+				DecalLifetime);	// 탄흔이 몇초동안 유지되어야 하는지
+
+			Decal->SetFadeScreenSize(0); // 화면 크기에 따른 페이드 설정
+		}
+		FVector test = SniperGunComp->GetSocketLocation(TEXT("MuzzleFlash"));
+
+		if (BeamParticles)
+		{
+			UNiagaraComponent* NiagaraComp = UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+				GetWorld(),
+				BeamParticles,  // UNiagaraSystem* 타입
+				test,
+				FRotator::ZeroRotator,
+				FVector(1.0f, 1.0f, 1.0f),  // Scale
+				true,  // AutoDestroy
+				true,  // AutoActivate
+				ENCPoolMethod::AutoRelease  // Pooling 방식
+			);
+
+			UNiagaraDataInterfaceArrayFunctionLibrary::SetNiagaraArrayVector(
+				NiagaraComp,
+				FName("ImpactPositions"),  // Niagara 변수 이름
+				TArray<FVector>({ hitInfo.ImpactPoint })  // ImpactPoint를 포함하는 배열
+			);
+
+			NiagaraComp->SetVariableBool(FName(TEXT("Trigger")), true);
 		}
 	}
 }

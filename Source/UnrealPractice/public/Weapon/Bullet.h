@@ -45,7 +45,9 @@ public:
 	// 멤버변수로 타이머 핸들을 저장
 	FTimerHandle deathTimer;
 	
-	
+public:
+	UFUNCTION()
+	void OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 
 #if WITH_EDITOR
 	// 액터의 특정 속성을 수정하면 호출되는 이벤트 함수

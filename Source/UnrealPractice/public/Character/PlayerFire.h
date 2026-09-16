@@ -78,4 +78,23 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
 	class UCameraComponent* TPSCamComp = nullptr;
+
+public:
+	UPROPERTY(EditDefaultsOnly, Category = "MyGame")
+	TObjectPtr<class UMaterialInterface> BulletDecalMaterial;
+
+	UPROPERTY(EditDefaultsOnly)
+	TObjectPtr<class UNiagaraSystem> BeamParticles;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "MyGame")
+	FVector DecalSize = FVector(10.0f, 10.0f, 10.0f);
+	UPROPERTY(EditDefaultsOnly, Category = "MyGame")
+	float DecalLifetime = 10.0f;
+
+public:
+	UPROPERTY(EditDefaultsOnly, Category = Weapon)
+	TSubclassOf<class AMyWeapon> StartingWeapon;
+
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<class AMyWeapon> CurrentWeapon = nullptr;
 };
