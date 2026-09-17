@@ -6,6 +6,14 @@
 #include "GameFramework/Actor.h"
 #include "MyWeapon.generated.h"
 
+UENUM(BlueprintType)
+enum class EWeaponType : uint8
+{
+	Rifle       UMETA(DisplayName = "Rifle"),
+	Rocket      UMETA(DisplayName = "Rocket Launcher"),
+	Sniper      UMETA(DisplayName = "Sniper Rifle"),
+};
+
 UCLASS()
 class UNREALPRACTICE_API AMyWeapon : public AActor
 {
@@ -26,5 +34,8 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, Category = "MyGame");
 	TObjectPtr<class USkeletalMeshComponent> WeaponMesh;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
+	EWeaponType WeaponType = EWeaponType::Rifle;
 
 };

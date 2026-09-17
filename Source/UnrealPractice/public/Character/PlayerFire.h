@@ -32,15 +32,16 @@ public:
 
 public:
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
-	class UInputAction* IA_AssaultRifle;
+	class UInputAction* IA_NextWeapon;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
-	class UInputAction* IA_SniperRifle;
+	class UInputAction* IA_PrevWeapon;
 
-	bool bUsingAssaultRifle = true;
+	bool bUsingSniperRifle = true;
 
-	void ChangeToAssaultRifle(const struct FInputActionValue& inputValue);
-	void ChangeToSniperRifle(const struct FInputActionValue& inputValue);
+	void Input_ChangeToNextWeapon(const struct FInputActionValue& inputValue);
+	void Input_ChangeToPrevWeapon(const struct FInputActionValue& inputValue);
+	void EquipWeapon();
 
 public:
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
@@ -67,12 +68,6 @@ public:
 	class USoundBase* BulletSound;
 
 public:
-	UPROPERTY(VisibleAnywhere, Category = GunMesh)
-	class USkeletalMeshComponent* GunMeshComp;
-
-	UPROPERTY(VisibleAnywhere, Category = GunMesh)
-	class USkeletalMeshComponent* SniperGunComp;
-
 	UPROPERTY(VisibleAnywhere, Category = "Camera")
 	class USpringArmComponent* SpringArmComp = nullptr;
 
@@ -92,9 +87,15 @@ public:
 	float DecalLifetime = 10.0f;
 
 public:
-	UPROPERTY(EditDefaultsOnly, Category = Weapon)
-	TSubclassOf<class AMyWeapon> StartingWeapon;
+	UPROPERTY(EditAnywhere)
+	TArray<TSubclassOf<class AMyWeapon>> StartingWeapons;
+
+	UPROPERTY(EditAnywhere)
+	TArray<TObjectPtr<class AMyWeapon>> WeaponList;
 
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<class AMyWeapon> CurrentWeapon = nullptr;
+
+	INT8 CurrentWeaponIdx = 0;
+
 };

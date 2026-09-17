@@ -27,9 +27,16 @@ void UPlayerFire::BeginPlay()
 	Super::BeginPlay();
 
 	FActorSpawnParameters SpawnParams;
-	SpawnParams.Owner = Me; // 스폰시킨 캐릭터를 Owner로 설정하고 Spawn시킨다.
+	SpawnParams.Owner = Me; 
 
-	CurrentWeapon = GetWorld()->SpawnActor<AMyWeapon>(StartingWeapon, Me->GetActorTransform(), SpawnParams);
+	INT8 currentWeaponIdx = 0;
+	for (auto element : StartingWeapons)
+	{
+		WeaponList[currentWeaponIdx] = GetWorld()->SpawnActor<AMyWeapon>(element, Me->GetActorTransform(), SpawnParams);
+		++currentWeaponIdx;
+	}
+
+	CurrentWeapon = WeaponList[0];
 	if (CurrentWeapon)
 	{
 		const USkeletalMeshSocket* HandSocket = Me->GetMesh()->GetSocketByName(FName("hand_rSocket"));
@@ -40,12 +47,8 @@ void UPlayerFire::BeginPlay()
 	}
 
 	TPSCamComp = Me->TPSCamComp;
-	GunMeshComp = Me->GunMeshComp;
-	SniperGunComp = Me->SniperGunComp;
 
 	SniperUI = CreateWidget(GetWorld(), SniperUIFactory);
-
-	ChangeToSniperRifle(FInputActionValue());
 }
 
 void UPlayerFire::InputFire(const struct FInputActionValue& inputValue)
@@ -61,7 +64,7 @@ void UPlayerFire::InputFire(const struct FInputActionValue& inputValue)
 	auto anim = Cast<UPlayerAnim>(Me->GetMesh()->GetAnimInstance());
 	anim->PlayAttackAnim();
 
-	if (bUsingAssaultRifle)
+	if (bUsingSniperRifle)
 	{
 		FTransform firePosition = CurrentWeapon->WeaponMesh->GetSocketTransform(TEXT("FirePosition"));
 		GetWorld()->SpawnActor<ABullet>(BulletFactory, firePosition);
@@ -108,7 +111,7 @@ void UPlayerFire::InputFire(const struct FInputActionValue& inputValue)
 
 			Decal->SetFadeScreenSize(0); // 화면 크기에 따른 페이드 설정
 		}
-		FVector test = SniperGunComp->GetSocketLocation(TEXT("MuzzleFlash"));
+		FVector test = CurrentWeapon->WeaponMesh->GetSocketLocation(TEXT("MuzzleFlash"));
 
 		if (BeamParticles)
 		{
@@ -134,20 +137,29 @@ void UPlayerFire::InputFire(const struct FInputActionValue& inputValue)
 	}
 }
 
-void UPlayerFire::ChangeToAssaultRifle(const struct FInputActionValue& inputValue)
+void UPlayerFire::Input_ChangeToNextWeapon(const FInputActionValue& inputValue)
 {
-	bUsingAssaultRifle = true;
-	SniperGunComp->SetVisibility(false);
-	GunMeshComp->SetVisibility(true);
-	Me->OnUsingGun(bUsingAssaultRifle);
+	++CurrentWeaponIdx;
+	if (CurrentWeaponIdx == WeaponList.Num())
+	{
+		CurrentWeaponIdx = 0;
+	}
+	EquipWeapon();
 }
 
-void UPlayerFire::ChangeToSniperRifle(const struct FInputActionValue& inputValue)
+void UPlayerFire::Input_ChangeToPrevWeapon(const FInputActionValue& inputValue)
 {
-	bUsingAssaultRifle = false;
-	SniperGunComp->SetVisibility(true);
-	GunMeshComp->SetVisibility(false);
-	Me->OnUsingGun(bUsingAssaultRifle);
+	--CurrentWeaponIdx;
+	if (CurrentWeaponIdx < 0)
+	{
+		CurrentWeaponIdx = WeaponList.Num()-1;
+	}
+	EquipWeapon();
+}
+
+void UPlayerFire::EquipWeapon()
+{
+	CurrentWeapon = WeaponList[CurrentWeaponIdx];
 }
 
 void UPlayerFire::SniperAim(const FInputActionValue& inputValue)
@@ -170,6 +182,6 @@ void UPlayerFire::SetupInputBinding(UEnhancedInputComponent* playerInput)
 {
 	playerInput->BindAction(IA_SniperZoom, ETriggerEvent::Started, this, &UPlayerFire::SniperAim);
 	playerInput->BindAction(IA_Fire, ETriggerEvent::Triggered, this, &UPlayerFire::InputFire);
-	playerInput->BindAction(IA_AssaultRifle, ETriggerEvent::Started, this, &UPlayerFire::ChangeToAssaultRifle);
-	playerInput->BindAction(IA_SniperRifle, ETriggerEvent::Started, this, &UPlayerFire::ChangeToSniperRifle);
+	playerInput->BindAction(IA_NextWeapon, ETriggerEvent::Started, this, &UPlayerFire::Input_ChangeToNextWeapon);
+	playerInput->BindAction(IA_PrevWeapon, ETriggerEvent::Started, this, &UPlayerFire::Input_ChangeToPrevWeapon);
 }

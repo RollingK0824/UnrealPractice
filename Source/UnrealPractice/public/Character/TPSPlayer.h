@@ -62,6 +62,12 @@ public:
 	UPROPERTY(VisibleAnywhere, Category = Component)
 	class UPlayerBaseComponent* PlayerMove;
 
-	/*UPROPERTY(VisibleAnywhere, Category = Component)
-	class UPlayerBaseComponent* PlayerFire;*/
+	UPROPERTY(VisibleAnywhere, Category = Component)
+	TObjectPtr<class UPlayerFire> PlayerFire;
+
+public:
+	float AO_StartYaw = 0;
+	float AO_Yaw = 0;
+	float AO_Pitch = 0;
+	void UpdateAimOffset(float DeltaTime);
 };

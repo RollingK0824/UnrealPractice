@@ -10,7 +10,6 @@
 
 ATPSPlayer::ATPSPlayer()
 {
-	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
 	ConstructorHelpers::FObjectFinder<USkeletalMesh>
@@ -41,26 +40,8 @@ ATPSPlayer::ATPSPlayer()
 
 	JumpMaxCount = 2;
 
-	GunMeshComp = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("GunMeshComp"));
-	GunMeshComp->SetupAttachment(GetMesh(), TEXT("hand_rSocket"));
-	ConstructorHelpers::FObjectFinder<USkeletalMesh>TempGunMesh(TEXT("/Script/Engine.SkeletalMesh'/Game/Assets/MilitaryWeapSilver/Weapons/Assault_Rifle_A.Assault_Rifle_A'"));
-	if (TempGunMesh.Succeeded())
-	{
-		GunMeshComp->SetSkeletalMesh(TempGunMesh.Object);
-		//GunMeshComp->SetRelativeLocation(FVector(-14, 11, 138));
-	}
-
-	SniperGunComp = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("SniperGunComp"));
-	SniperGunComp->SetupAttachment(GetMesh(), TEXT("hand_rSocket"));
-	ConstructorHelpers::FObjectFinder<USkeletalMesh>TempSniperMesh(TEXT("/Script/Engine.SkeletalMesh'/Game/Assets/MilitaryWeapSilver/Weapons/Sniper_Rifle_A.Sniper_Rifle_A'"));
-	if (TempSniperMesh.Succeeded())
-	{
-		SniperGunComp->SetSkeletalMesh(TempSniperMesh.Object);
-		//SniperGunComp->SetRelativeLocation(FVector(-22, 31, 128));
-	}
-
 	PlayerMove = CreateDefaultSubobject<UPlayerMove>(TEXT("PlayerMove"));
-	//PlayerFire = CreateDefaultSubobject<UPlayerFire>(TEXT("PlayerFire"));
+	PlayerFire = CreateDefaultSubobject<UPlayerFire>(TEXT("PlayerFire"));
 }
 
 void ATPSPlayer::BeginPlay()
@@ -84,6 +65,8 @@ void ATPSPlayer::BeginPlay()
 void ATPSPlayer::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	UpdateAimOffset(DeltaTime);
 }
 
 // Called to bind functionality to input
@@ -95,8 +78,6 @@ void ATPSPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 	if (PlayerInput)
 	{
 		OnInputBindingDelegate.Broadcast(PlayerInput);
-		/*PlayerMove->SetupInputBinding(PlayerInput);
-		PlayerFire->SetupInputBinding(PlayerInput);*/
 	}
 }
 
@@ -109,6 +90,40 @@ void ATPSPlayer::OnHitEvent()
 		PRINT_LOG(TEXT("Player Is Dead"));
 		OnGameOver();
 	}
+}
+
+void ATPSPlayer::UpdateAimOffset(float DeltaTime)
+{
+	FVector Velocity = GetVelocity();
+	float Speed = Velocity.Size2D();  // 높이에 대한 속도는 무시하고, 수평속도만 계산
+	bool bIsInAir = GetCharacterMovement()->IsFalling();
+
+	// 가만히 있을때 AO_Yaw 계산
+	if (Speed == 0.f && !bIsInAir)
+	{
+		// 현재 회전값
+		float CurrentYaw = GetController()->GetControlRotation().Yaw;
+
+		// -180~180 사이의 차이값으로 정규화해서 넘겨준다.
+		float DeltaYaw = FMath::FindDeltaAngleDegrees(AO_StartYaw, CurrentYaw);
+
+		// 시작 AO YAW 값을 기준으로 차이점을 계산한다.
+		AO_Yaw = DeltaYaw;  //CurrentYaw - AO_StartYaw;
+
+		// 에임오프셋이 적용될때는, 컨트롤러가 회전해도 캐릭터는 제자리에 서있어야 한다.
+		bUseControllerRotationYaw = false;
+	}
+	else
+	{
+		AO_Yaw = 0;
+		AO_StartYaw = GetController()->GetControlRotation().Yaw;  // 이동 중에는 시작값을 계속 갱신
+
+		// 달리기 시작하면, TPS 장르처럼 카메라 방향으로 캐릭터가 회전해야한다.
+		bUseControllerRotationYaw = true;
+	}
+
+	// 액터의 눈의 위치로 Pitch를 계산하면 편하다
+	AO_Pitch = GetBaseAimRotation().Pitch;
 }
 
 void ATPSPlayer::OnGameOver_Implementation()

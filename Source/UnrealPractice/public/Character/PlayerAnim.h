@@ -20,7 +20,7 @@ public:
 	void PlayAttackAnim();
 public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = PlayerAnim)
-	TObjectPtr<class ACharacter> Character;
+	TObjectPtr<class ATPSPlayer> Character;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = PlayerAnim)
 	TObjectPtr<class UCharacterMovementComponent> MovementComponent;
@@ -42,5 +42,19 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = PlayerAnim)
 	bool bIsFalling = false;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = PlayerAnim)
+	bool bIsShot = false;
+
+	FTimerHandle StateResetTimerHandle;
 	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = PlayerAnim)
+	FTransform LeftHandTransform;
+
+	// 에임 오프셋값
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = PlayerAnim)
+	float AO_Yaw = 0;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = PlayerAnim)
+	float AO_Pitch = 0;
+
 };
