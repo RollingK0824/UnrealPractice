@@ -1,25 +1,27 @@
 #include "Character/PlayerFire.h"
 #include "EnhancedInputComponent.h"
 #include "InputActionValue.h"
-#include "Weapon/Bullet.h"
-#include <Blueprint/UserWidget.h>
-#include <Kismet/GameplayStatics.h>
-#include "Enemy/EnemyFSM.h"
-#include <Camera/CameraComponent.h>
-#include "Character/PlayerAnim.h"
-#include "NiagaraFunctionLibrary.h"
-#include "NiagaraDataInterfaceArrayFunctionLibrary.h"
-#include "NiagaraComponent.h"
-#include "Components/DecalComponent.h"
-#include "Weapon/MyWeapon.h"
+#include "Weapon/WeaponBase.h"
 #include "Engine/SkeletalMeshSocket.h"
+#include "Character/PlayerAnim.h"
+//#include "Character/PlayerAnim.h"
+//#include "NiagaraFunctionLibrary.h"
+//#include "NiagaraDataInterfaceArrayFunctionLibrary.h"
+//#include "NiagaraComponent.h"
+//#include "Components/DecalComponent.h"
+//#include "Weapon/Bullet.h"
+//#include <Blueprint/UserWidget.h>
+//#include <Kismet/GameplayStatics.h>
+//#include "Enemy/EnemyFSM.h"
+//#include <Camera/CameraComponent.h>
+
 UPlayerFire::UPlayerFire()
 {
-	ConstructorHelpers::FObjectFinder<USoundBase> tempSound(TEXT("/Script/Engine.SoundCue'/Game/Assets/MilitaryWeapSilver/Sound/Rifle/Cues/RifleA_Fire_Cue.RifleA_Fire_Cue'"));
+	/*ConstructorHelpers::FObjectFinder<USoundBase> tempSound(TEXT("/Script/Engine.SoundCue'/Game/Assets/MilitaryWeapSilver/Sound/Rifle/Cues/RifleA_Fire_Cue.RifleA_Fire_Cue'"));
 	if (tempSound.Succeeded())
 	{
 		BulletSound = tempSound.Object;
-	}
+	}*/
 }
 
 void UPlayerFire::BeginPlay()
@@ -27,118 +29,136 @@ void UPlayerFire::BeginPlay()
 	Super::BeginPlay();
 
 	FActorSpawnParameters SpawnParams;
-	SpawnParams.Owner = Me; 
+	SpawnParams.Owner = Me;
 
 	INT8 currentWeaponIdx = 0;
 	for (auto element : StartingWeapons)
 	{
-		WeaponList[currentWeaponIdx] = GetWorld()->SpawnActor<AMyWeapon>(element, Me->GetActorTransform(), SpawnParams);
+		if (element == nullptr)continue;
+		WeaponList.Add(GetWorld()->SpawnActor<AWeaponBase>(element, Me->GetActorTransform(), SpawnParams));
 		++currentWeaponIdx;
 	}
 
-	CurrentWeapon = WeaponList[0];
-	if (CurrentWeapon)
+	if (WeaponList.IsValidIndex(0))
 	{
-		const USkeletalMeshSocket* HandSocket = Me->GetMesh()->GetSocketByName(FName("hand_rSocket"));
-		if (HandSocket)
+		CurrentWeapon = WeaponList[0];
+		if (CurrentWeapon)
 		{
-			HandSocket->AttachActor(CurrentWeapon, Me->GetMesh());
+			const USkeletalMeshSocket* HandSocket = Me->GetMesh()->GetSocketByName(FName("hand_rSocket"));
+			if (HandSocket)
+			{
+				HandSocket->AttachActor(CurrentWeapon, Me->GetMesh());
+			}
 		}
 	}
 
-	TPSCamComp = Me->TPSCamComp;
-
-	SniperUI = CreateWidget(GetWorld(), SniperUIFactory);
+	/*SniperUI = CreateWidget(GetWorld(), SniperUIFactory);*/
 }
 
-void UPlayerFire::InputFire(const struct FInputActionValue& inputValue)
+void UPlayerFire::InputPrimaryAction(const struct FInputActionValue& inputValue)
 {
-	UGameplayStatics::PlaySound2D(GetWorld(), BulletSound);
+	if (CurrentWeapon == nullptr) return;
+	Me->PlayAnimMontage(CurrentWeapon->AttackMontage);
 
-	auto PlayerController = GetWorld()->GetFirstPlayerController();
-	if (PlayerController)
+	if (UPlayerAnim* Anim = Cast<UPlayerAnim>(Me->GetMesh()->GetAnimInstance()))
 	{
-		PlayerController->PlayerCameraManager->StartCameraShake(CameraShake);
+		Anim->PlayAttackAnim();
 	}
 
-	auto anim = Cast<UPlayerAnim>(Me->GetMesh()->GetAnimInstance());
-	anim->PlayAttackAnim();
+	CurrentWeapon->PrimaryAction();
+	//UGameplayStatics::PlaySound2D(GetWorld(), BulletSound);
 
-	if (bUsingSniperRifle)
-	{
-		FTransform firePosition = CurrentWeapon->WeaponMesh->GetSocketTransform(TEXT("FirePosition"));
-		GetWorld()->SpawnActor<ABullet>(BulletFactory, firePosition);
-	}
-	else
-	{
-		FVector startPos = TPSCamComp->GetComponentLocation();
-		FVector endPos = TPSCamComp->GetComponentLocation() + TPSCamComp->GetForwardVector() * 5000;
-		FHitResult hitInfo;
-		FCollisionQueryParams params;
-		params.AddIgnoredActor(Me);
+	//auto PlayerController = GetWorld()->GetFirstPlayerController();
+	//if (PlayerController)
+	//{
+	//	PlayerController->PlayerCameraManager->StartCameraShake(CameraShake);
+	//}
 
-		bool bHit = GetWorld()->LineTraceSingleByChannel(hitInfo, startPos, endPos, ECC_Visibility, params);
-		if (bHit)
-		{
-			FTransform bulletTrans;
-			bulletTrans.SetLocation(hitInfo.ImpactPoint);
-			UNiagaraFunctionLibrary::SpawnSystemAtLocation(
-				this,
-				BulletEffectFactory,
-				hitInfo.ImpactPoint);
+	//auto anim = Cast<UPlayerAnim>(Me->GetMesh()->GetAnimInstance());
+	//anim->PlayAttackAnim();
 
-			auto hitComp = hitInfo.GetComponent();
-			if (hitComp && hitComp->IsSimulatingPhysics())
-			{
-				FVector dir = (endPos - startPos).GetSafeNormal();
-				FVector force = dir * hitComp->GetMass() * 50000;
-				hitComp->AddForceAtLocation(force, hitInfo.ImpactPoint);
-			}
+	//if (bUsingSniperRifle)
+	//{
+	//	FTransform firePosition = CurrentWeapon->WeaponMesh->GetSocketTransform(TEXT("FirePosition"));
+	//	GetWorld()->SpawnActor<ABullet>(BulletFactory, firePosition);
+	//}
+	//else
+	//{
+	//	FVector startPos = TPSCamComp->GetComponentLocation();
+	//	FVector endPos = TPSCamComp->GetComponentLocation() + TPSCamComp->GetForwardVector() * 5000;
+	//	FHitResult hitInfo;
+	//	FCollisionQueryParams params;
+	//	params.AddIgnoredActor(Me);
 
-			auto enemy = hitInfo.GetActor()->GetDefaultSubobjectByName(TEXT("FSM"));
-			if (enemy)
-			{
-				auto enemyFSM = Cast<UEnemyFSM>(enemy);
-				enemyFSM->OnDamageProcess();
-			}
+	//	bool bHit = GetWorld()->LineTraceSingleByChannel(hitInfo, startPos, endPos, ECC_Visibility, params);
+	//	if (bHit)
+	//	{
+	//		FTransform bulletTrans;
+	//		bulletTrans.SetLocation(hitInfo.ImpactPoint);
+	//		UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+	//			this,
+	//			BulletEffectFactory,
+	//			hitInfo.ImpactPoint);
 
-			UDecalComponent* Decal = UGameplayStatics::SpawnDecalAtLocation(GetWorld(),
-				BulletDecalMaterial,	// 데칼 머티리얼 자체를 변수로
-				DecalSize,	// 사이즈는 원하는 데칼 크기
-				hitInfo.ImpactPoint,
-				hitInfo.ImpactNormal.Rotation(),
-				DecalLifetime);	// 탄흔이 몇초동안 유지되어야 하는지
+	//		auto hitComp = hitInfo.GetComponent();
+	//		if (hitComp && hitComp->IsSimulatingPhysics())
+	//		{
+	//			FVector dir = (endPos - startPos).GetSafeNormal();
+	//			FVector force = dir * hitComp->GetMass() * 50000;
+	//			hitComp->AddForceAtLocation(force, hitInfo.ImpactPoint);
+	//		}
 
-			Decal->SetFadeScreenSize(0); // 화면 크기에 따른 페이드 설정
-		}
-		FVector test = CurrentWeapon->WeaponMesh->GetSocketLocation(TEXT("MuzzleFlash"));
+	//		auto enemy = hitInfo.GetActor()->GetDefaultSubobjectByName(TEXT("FSM"));
+	//		if (enemy)
+	//		{
+	//			auto enemyFSM = Cast<UEnemyFSM>(enemy);
+	//			enemyFSM->OnDamageProcess();
+	//		}
 
-		if (BeamParticles)
-		{
-			UNiagaraComponent* NiagaraComp = UNiagaraFunctionLibrary::SpawnSystemAtLocation(
-				GetWorld(),
-				BeamParticles,  // UNiagaraSystem* 타입
-				test,
-				FRotator::ZeroRotator,
-				FVector(1.0f, 1.0f, 1.0f),  // Scale
-				true,  // AutoDestroy
-				true,  // AutoActivate
-				ENCPoolMethod::AutoRelease  // Pooling 방식
-			);
+	//		UDecalComponent* Decal = UGameplayStatics::SpawnDecalAtLocation(GetWorld(),
+	//			BulletDecalMaterial,	// 데칼 머티리얼 자체를 변수로
+	//			DecalSize,	// 사이즈는 원하는 데칼 크기
+	//			hitInfo.ImpactPoint,
+	//			hitInfo.ImpactNormal.Rotation(),
+	//			DecalLifetime);	// 탄흔이 몇초동안 유지되어야 하는지
 
-			UNiagaraDataInterfaceArrayFunctionLibrary::SetNiagaraArrayVector(
-				NiagaraComp,
-				FName("ImpactPositions"),  // Niagara 변수 이름
-				TArray<FVector>({ hitInfo.ImpactPoint })  // ImpactPoint를 포함하는 배열
-			);
+	//		Decal->SetFadeScreenSize(0); // 화면 크기에 따른 페이드 설정
+	//	}
+	//	FVector test = CurrentWeapon->WeaponMesh->GetSocketLocation(TEXT("MuzzleFlash"));
 
-			NiagaraComp->SetVariableBool(FName(TEXT("Trigger")), true);
-		}
-	}
+	//	if (BeamParticles)
+	//	{
+	//		UNiagaraComponent* NiagaraComp = UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+	//			GetWorld(),
+	//			BeamParticles,  // UNiagaraSystem* 타입
+	//			test,
+	//			FRotator::ZeroRotator,
+	//			FVector(1.0f, 1.0f, 1.0f),  // Scale
+	//			true,  // AutoDestroy
+	//			true,  // AutoActivate
+	//			ENCPoolMethod::AutoRelease  // Pooling 방식
+	//		);
+
+	//		UNiagaraDataInterfaceArrayFunctionLibrary::SetNiagaraArrayVector(
+	//			NiagaraComp,
+	//			FName("ImpactPositions"),  // Niagara 변수 이름
+	//			TArray<FVector>({ hitInfo.ImpactPoint })  // ImpactPoint를 포함하는 배열
+	//		);
+
+	//		NiagaraComp->SetVariableBool(FName(TEXT("Trigger")), true);
+	//	}
+	//}
+}
+
+void UPlayerFire::InputSecondaryAction(const FInputActionValue& inputValue)
+{
+	CurrentWeapon->SecondaryAction();
 }
 
 void UPlayerFire::Input_ChangeToNextWeapon(const FInputActionValue& inputValue)
 {
+	if (WeaponList.Num() <= 1) return;
+
 	++CurrentWeaponIdx;
 	if (CurrentWeaponIdx == WeaponList.Num())
 	{
@@ -149,39 +169,43 @@ void UPlayerFire::Input_ChangeToNextWeapon(const FInputActionValue& inputValue)
 
 void UPlayerFire::Input_ChangeToPrevWeapon(const FInputActionValue& inputValue)
 {
+	if (WeaponList.Num() <= 1) return;
+
 	--CurrentWeaponIdx;
 	if (CurrentWeaponIdx < 0)
 	{
-		CurrentWeaponIdx = WeaponList.Num()-1;
+		CurrentWeaponIdx = WeaponList.Num() - 1;
 	}
 	EquipWeapon();
 }
 
 void UPlayerFire::EquipWeapon()
 {
-	CurrentWeapon = WeaponList[CurrentWeaponIdx];
-}
+	if (WeaponList[CurrentWeaponIdx] == nullptr)return;
 
-void UPlayerFire::SniperAim(const FInputActionValue& inputValue)
-{
-	if (bSniperAim == false)
+	if (CurrentWeapon && WeaponList[CurrentWeaponIdx])
 	{
-		bSniperAim = true;
-		SniperUI->AddToViewport();
-		TPSCamComp->SetFieldOfView(45.0f);
-	}
-	else
-	{
-		bSniperAim = false;
-		SniperUI->RemoveFromParent();
-		TPSCamComp->SetFieldOfView(90.0f);
+		CurrentWeapon->WeaponMesh->SetVisibility(false);
+
+		CurrentWeapon = WeaponList[CurrentWeaponIdx];
+
+		CurrentWeapon->WeaponMesh->SetVisibility(true);
+		const USkeletalMeshSocket* HandSocket = Me->GetMesh()->GetSocketByName(FName("hand_rSocket"));
+		if (HandSocket)
+		{
+			HandSocket->AttachActor(CurrentWeapon, Me->GetMesh());
+		}
+		if (CurrentWeapon->WeaponAnimLayerClass)
+		{
+			Me->GetMesh()->LinkAnimClassLayers(CurrentWeapon->WeaponAnimLayerClass);
+		}
 	}
 }
 
 void UPlayerFire::SetupInputBinding(UEnhancedInputComponent* playerInput)
 {
-	playerInput->BindAction(IA_SniperZoom, ETriggerEvent::Started, this, &UPlayerFire::SniperAim);
-	playerInput->BindAction(IA_Fire, ETriggerEvent::Triggered, this, &UPlayerFire::InputFire);
+	playerInput->BindAction(IA_PrimaryAction, ETriggerEvent::Triggered, this, &UPlayerFire::InputPrimaryAction);
+	playerInput->BindAction(IA_SecondaryAction, ETriggerEvent::Started, this, &UPlayerFire::InputSecondaryAction);
 	playerInput->BindAction(IA_NextWeapon, ETriggerEvent::Started, this, &UPlayerFire::Input_ChangeToNextWeapon);
 	playerInput->BindAction(IA_PrevWeapon, ETriggerEvent::Started, this, &UPlayerFire::Input_ChangeToPrevWeapon);
 }

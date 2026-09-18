@@ -2,7 +2,7 @@
 #include "Character/TPSPlayer.h"
 #include "Character/PlayerFire.h"
 #include <GameFramework/CharacterMovementComponent.h>
-#include "Weapon/MyWeapon.h"
+#include "Weapon/WeaponBase.h"
 void UPlayerAnim::NativeInitializeAnimation()
 {
 	Super::NativeInitializeAnimation();
@@ -33,7 +33,7 @@ void UPlayerAnim::NativeUpdateAnimation(float DeltaSeconds)
 	}
 	if (!Character)return;
 	if (!Character->PlayerFire)return;
-	if (AMyWeapon* Weapon = Character->PlayerFire->CurrentWeapon)
+	if (AWeaponBase* Weapon = Character->PlayerFire->CurrentWeapon)
 	{
 		// 무기의 LeftHandSocket 위치를 월드 좌표로 가져온다.
 		FTransform LeftHandWorldTransform = Weapon->WeaponMesh->GetSocketTransform(FName("LeftHandSocket"), ERelativeTransformSpace::RTS_World);

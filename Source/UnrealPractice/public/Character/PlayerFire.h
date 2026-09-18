@@ -7,12 +7,12 @@
 #include "PlayerFire.generated.h"
 
 /**
- * 
+ *
  */
-UCLASS(ClassGroup=(PlayerComponent),meta = (BlueprintSpawnableComponent))
+UCLASS(ClassGroup = (PlayerComponent), meta = (BlueprintSpawnableComponent))
 class UNREALPRACTICE_API UPlayerFire : public UPlayerBaseComponent
 {
-	GENERATED_BODY() 
+	GENERATED_BODY()
 
 public:
 	UPlayerFire();
@@ -22,79 +22,40 @@ public:
 	virtual void SetupInputBinding(class UEnhancedInputComponent* playerInput)override;
 
 public:
-	UPROPERTY(EditDefaultsOnly, Category = BulletFactory)
-	TSubclassOf<class ABullet> BulletFactory;
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	class UInputAction* IA_PrimaryAction;
+	void InputPrimaryAction(const struct FInputActionValue& inputValue);
 
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
-	class UInputAction* IA_Fire;
+	class UInputAction* IA_SecondaryAction;
+	void InputSecondaryAction(const struct FInputActionValue& inputValue);
 
-	void InputFire(const struct FInputActionValue& inputValue);
-
-public:
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	class UInputAction* IA_NextWeapon;
+	void Input_ChangeToNextWeapon(const struct FInputActionValue& inputValue);
 
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	class UInputAction* IA_PrevWeapon;
-
-	bool bUsingSniperRifle = true;
-
-	void Input_ChangeToNextWeapon(const struct FInputActionValue& inputValue);
 	void Input_ChangeToPrevWeapon(const struct FInputActionValue& inputValue);
+
 	void EquipWeapon();
-
-public:
-	UPROPERTY(EditDefaultsOnly, Category = "Input")
-	class UInputAction* IA_SniperZoom;
-
-	UPROPERTY(EditDefaultsOnly, Category = SniperUI)
-	TSubclassOf<class UUserWidget> SniperUIFactory;
-
-	UPROPERTY()
-	class UUserWidget* SniperUI;
-
-	bool bSniperAim = false;
-
-	void SniperAim(const struct FInputActionValue& inputValue);
-
-public:
-	UPROPERTY(EditAnywhere, Category = BulletEffect)
-	TObjectPtr<class UNiagaraSystem> BulletEffectFactory;
-
-	UPROPERTY(EditDefaultsOnly, Category = CameraMotion)
-	TSubclassOf<class UCameraShakeBase> CameraShake;
-
-	UPROPERTY(EditDefaultsOnly, Category = Sound)
-	class USoundBase* BulletSound;
-
-public:
-	UPROPERTY(VisibleAnywhere, Category = "Camera")
-	class USpringArmComponent* SpringArmComp = nullptr;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
-	class UCameraComponent* TPSCamComp = nullptr;
-
-public:
-	UPROPERTY(EditDefaultsOnly, Category = "MyGame")
-	TObjectPtr<class UMaterialInterface> BulletDecalMaterial;
-
-	UPROPERTY(EditDefaultsOnly)
-	TObjectPtr<class UNiagaraSystem> BeamParticles;
-	
-	UPROPERTY(EditDefaultsOnly, Category = "MyGame")
-	FVector DecalSize = FVector(10.0f, 10.0f, 10.0f);
-	UPROPERTY(EditDefaultsOnly, Category = "MyGame")
-	float DecalLifetime = 10.0f;
+//
+//public:
+//	UPROPERTY(VisibleAnywhere, Category = "Camera")
+//	class USpringArmComponent* SpringArmComp = nullptr;
+//
+//	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
+//	class UCameraComponent* TPSCamComp = nullptr;
 
 public:
 	UPROPERTY(EditAnywhere)
-	TArray<TSubclassOf<class AMyWeapon>> StartingWeapons;
+	TArray<TSubclassOf<class AWeaponBase>> StartingWeapons;
 
 	UPROPERTY(EditAnywhere)
-	TArray<TObjectPtr<class AMyWeapon>> WeaponList;
+	TArray<TObjectPtr<class AWeaponBase>> WeaponList;
 
 	UPROPERTY(EditAnywhere)
-	TObjectPtr<class AMyWeapon> CurrentWeapon = nullptr;
+	TObjectPtr<class AWeaponBase> CurrentWeapon = nullptr;
 
 	INT8 CurrentWeaponIdx = 0;
 
