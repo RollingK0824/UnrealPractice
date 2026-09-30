@@ -40,7 +40,7 @@ ATPSPlayer::ATPSPlayer()
 	//_springArmComp->SetRelativeLocation(FVector(0, 70, 90));
 	springArmComp->SocketOffset = FVector(0, 70, 90);  // 소켓 오프셋으로 변경
 	springArmComp->ProbeSize = 20;						// 프로브 크기 수정(충돌체 사이즈 키우자)
-	springArmComp->TargetArmLength = 400; 
+	springArmComp->TargetArmLength = 400;
 	springArmComp->bUsePawnControlRotation = true;
 
 	// 3-2. Camera 컴포넌트 붙이기
@@ -64,7 +64,7 @@ ATPSPlayer::ATPSPlayer()
 void ATPSPlayer::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
 	auto PC = Cast<APlayerController>(Controller);
 	if (PC)
 	{
@@ -82,13 +82,18 @@ void ATPSPlayer::BeginPlay()
 	}
 
 	// 파라곤 캐릭터는 무기를 숨긴다.
-	if (GetMesh())
+	if (GetMesh() != nullptr)
 	{
 		GetMesh()->HideBoneByName(TEXT("weapon"), EPhysBodyOp::PBO_None);
 	}
 
-	// 시작 AimOffset Yaw 값 저장
-	AO_StartYaw = GetController()->GetControlRotation().Yaw;
+	if (GetController() != nullptr)
+	{
+		// 시작 AimOffset Yaw 값 저장
+		AO_StartYaw = GetController()->GetControlRotation().Yaw;
+
+
+	}
 }
 
 // Called every frame
@@ -98,8 +103,12 @@ void ATPSPlayer::Tick(float DeltaTime)
 
 	// 카메라 거리, 캐릭터 거리 비교. 
 	// 거리값이 내가 원하는 거리보다 작다면,, 메시를 숨김처리한다.
+	if (tpsCamComp == nullptr)return;
+
 	FVector DistVector = tpsCamComp->GetComponentLocation() - GetActorLocation();
 	double Dist = DistVector.Size();
+
+	if (GetMesh() == nullptr)return;
 
 	// unit 단위 : 1 = 1cm
 	if (Dist < MeshVisibleDistance)
@@ -183,6 +192,8 @@ void ATPSPlayer::UpdateAimOffset(float DeltaTime)
 	FVector Velocity = GetVelocity();
 	float Speed = Velocity.Size2D();  // 높이에 대한 속도는 무시하고, 수평속도만 계산
 	bool bIsInAir = GetCharacterMovement()->IsFalling();
+
+	if (GetController() == nullptr)return;
 
 	// 가만히 있을때 AO_Yaw 계산
 	if (Speed == 0.f && !bIsInAir)

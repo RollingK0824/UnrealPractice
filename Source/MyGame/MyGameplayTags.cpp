@@ -12,4 +12,5 @@ namespace MyGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Input_Action_Jump, "Input.Action.Jump");
 	UE_DEFINE_GAMEPLAY_TAG(Input_Action_ChangeWeapon, "Input.Action.ChangeWeapon");
 	UE_DEFINE_GAMEPLAY_TAG(Input_Action_SniperAim, "Input.Action.SniperAim");
+	UE_DEFINE_GAMEPLAY_TAG(Input_Action_Interact, "Input.Action.Interact");
 }

@@ -87,6 +87,7 @@ void UEnemyFSM::IdleState()
 		// 애니메이션 상태 동기화
 		anim->animState = mState;
 		// 최초 랜덤한 위치 정해주기
+		if (me == nullptr)return;
 		GetRandomPositionInNavMesh(me->GetActorLocation(), 500, randomPos);
 	}
 }
