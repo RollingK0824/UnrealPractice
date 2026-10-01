@@ -21,5 +21,5 @@ class MYGAME_API UMyDataSubsystem : public UGameInstanceSubsystem
 	GENERATED_BODY()
 	
 public:
-	const UInputAction* FindInputActionByTag(const FGameplayTag& InputTag) const;
+	const UInputAction* FindInputActionByTag(const FGameplayTag& InputTag) const; 
 };

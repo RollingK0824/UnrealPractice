@@ -102,4 +102,8 @@ public:
 	float AO_Yaw = 0;
 	float AO_Pitch = 0;
 	void UpdateAimOffset(float DeltaTime);
+
+public:
+	class UDataTable* CharacterDataTable;
+	struct FTPSProjectPlayerStats* CharacterStats;
 };
